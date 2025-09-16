@@ -67,7 +67,7 @@ It creates sample files/folders in the current directory so you can quickly test
 
 Run it with:
 ```bash
-python3 generate_testing_files.py
+python generate_testing_files.py
 ```
 Make sure the directory is empty before running this script (no duplicate checks).
 
@@ -92,3 +92,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 
 Copyright (c) 2025 Cypher Nomad
+

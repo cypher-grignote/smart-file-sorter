@@ -10,7 +10,7 @@ It organizes files by type (music, video, documents, pictures, archives, etc.) a
 - Supports a wide range of file extensions (see source code for the full list).
 - Automatically creates destination folders if they do not exist.
 - Prevents overwriting by renaming duplicates with `_(copy)`.
-- Skips hidden files and the script itself.
+- Skips hidden files, common system files and the script itself.
 
 ---
 
@@ -92,5 +92,6 @@ This project is licensed under the [MIT License](LICENSE).
 
 
 Copyright (c) 2025 Cypher Grignote
+
 
 

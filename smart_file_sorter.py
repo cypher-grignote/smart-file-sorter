@@ -38,6 +38,93 @@ import sys
 from pathlib import Path
 
 
+PYTHON_SCRIPT_NAME = Path(sys.argv[0]).name
+WHITE_LIST = {
+    "Directory",
+    "Miscellaneous",
+    PYTHON_SCRIPT_NAME,
+    "generate_testing_files.py",
+    "thumbs.db",
+    "Thumbs.db",
+    "ehthumbs.db",
+    "desktop.ini",
+    "System Volume Information",
+    "$RECYCLE.BIN",
+}
+
+args = sys.argv
+FORMATS = {
+    "Music": {".aac", ".alac", ".flac", ".m4a", ".mp3", ".ogg", ".wma"},
+    "Video": {".avi", ".flv", ".m4v", ".mkv", ".mov", ".mp4", ".webm"},
+    "Picture": {
+        ".ai",
+        ".bmp",
+        ".gif",
+        ".heic",
+        ".heif",
+        ".jpeg",
+        ".jpg",
+        ".png",
+        ".psd",
+        ".raw",
+        ".svg",
+        ".tiff",
+        ".webp",
+        ".xcf",
+    },
+    "Spreadsheet": {".csv", ".ods", ".xls", ".xlsm", ".xlsx"},
+    "PowerPoint": {".key", ".odp", ".ppt", ".pptx"},
+    "Document": {
+        ".docx",
+        ".fb2",
+        ".md",
+        ".odt",
+        ".pages",
+        ".pdf",
+        ".rtf",
+        ".rtfd",
+        ".tex",
+        ".txt",
+    },
+    "Archive": {".7z", ".bz2", ".gz", ".rar", ".tar", ".zip"},
+    "Ebook": {".azw3", ".epub", ".mobi", ".prc"},
+    "Development": {
+        ".c",
+        ".cpp",
+        ".cs",
+        ".css",
+        ".go",
+        ".h",
+        ".html",
+        ".ipynb",
+        ".java",
+        ".js",
+        ".json",
+        ".php",
+        ".py",
+        ".rs",
+        ".sh",
+        ".ts",
+        ".tsx",
+        ".xml",
+        ".yaml",
+        ".yml",
+    },
+    "Application": {
+        ".appimage",
+        ".bat",
+        ".deb",
+        ".dmg",
+        ".exe",
+        ".img",
+        ".iso",
+        ".msi",
+        ".snap",
+        ".vbs",
+    },
+}
+
+
 def create_directory(new_directory: Path) -> None:
     """Allows to create a directory by checking if it already exists.
 
@@ -62,7 +149,7 @@ def display_move(src_name: str, dest_name: str) -> None:
 
 def white_list(name: str, WHITE_LIST: set, FORMATS: dict) -> bool:
     """Prevents modification of the folders used for sorting, hidden
-     elements, and the script itself.
+     elements, destination folders used for sorting and the script itself.
 
     Args:
         name (str): Filename.
@@ -70,9 +157,15 @@ def white_list(name: str, WHITE_LIST: set, FORMATS: dict) -> bool:
         FORMATS (dict): Folder names used for sorting.
 
     Returns:
-        bool: True if the file is whitelisted, False if it is not.
+        bool: True if the item should be skipped (whitelisted),
+        False otherwise.
     """
-    return name in WHITE_LIST or name.startswith(".") or name in FORMATS.keys()
+    return (
+        name in WHITE_LIST
+        or name.startswith(".")
+        or name.startswith("_")
+        or name in FORMATS.keys()
+    )
 
 
 def f_base_directory(args: tuple[str, ...]) -> Path:
@@ -174,139 +267,72 @@ def success():
     sys.exit(0)
 
 
-PYTHON_SCRIPT_NAME = Path(sys.argv[0]).name
-WHITE_LIST = {
-    "Directory",
-    "Miscellaneous",
-    PYTHON_SCRIPT_NAME,
-    "generate_testing_files.py",
-}
-args = sys.argv
-FORMATS = {
-    "Music": {".aac", ".alac", ".flac", ".m4a", ".mp3", ".ogg", ".wma"},
-    "Video": {".avi", ".flv", ".m4v", ".mkv", ".mov", ".mp4", ".webm"},
-    "Picture": {
-        ".ai",
-        ".bmp",
-        ".gif",
-        ".heic",
-        ".heif",
-        ".jpeg",
-        ".jpg",
-        ".png",
-        ".psd",
-        ".raw",
-        ".svg",
-        ".tiff",
-        ".webp",
-        ".xcf",
-    },
-    "Spreadsheet": {".csv", ".ods", ".xls", ".xlsm", ".xlsx"},
-    "PowerPoint": {".key", ".odp", ".ppt", ".pptx"},
-    "Document": {
-        ".docx",
-        ".fb2",
-        ".md",
-        ".odt",
-        ".pages",
-        ".pdf",
-        ".rtf",
-        ".rtfd",
-        ".tex",
-        ".txt",
-    },
-    "Archive": {".7z", ".bz2", ".gz", ".rar", ".tar", ".zip"},
-    "Ebook": {".azw3", ".epub", ".mobi", ".prc"},
-    "Development": {
-        ".c",
-        ".cpp",
-        ".cs",
-        ".css",
-        ".go",
-        ".h",
-        ".html",
-        ".ipynb",
-        ".java",
-        ".js",
-        ".json",
-        ".php",
-        ".py",
-        ".rs",
-        ".sh",
-        ".ts",
-        ".tsx",
-        ".xml",
-        ".yaml",
-        ".yml",
-    },
-    "Application": {
-        ".appimage",
-        ".bat",
-        ".deb",
-        ".dmg",
-        ".exe",
-        ".img",
-        ".iso",
-        ".msi",
-        ".snap",
-        ".vbs",
-    },
-}
-BASE_DIRECTORY = f_base_directory(tuple(args))
+def main():
+    for element in BASE_DIRECTORY.iterdir():
+        name = element.name
 
-for element in BASE_DIRECTORY.iterdir():
-    name = element.name
+        if white_list(name, WHITE_LIST, FORMATS):
+            continue
 
-    if white_list(name, WHITE_LIST, FORMATS):
-        continue
+        extension = element.suffix.lower()
 
-    name_without_extension = element.stem
-    extension = element.suffix.lower()
-
-    if not extension:
-        if element.is_dir():
-            new_directory = Path(BASE_DIRECTORY / "Directory")
-            create_directory(new_directory)
-            new_file = new_directory / name
-            new_file = file_name_existing_without_extension(new_directory, new_file)
-            element.rename(new_file)
-            display_move(name, new_file.name)
-
-        else:
-            new_directory = Path(BASE_DIRECTORY / "Miscellaneous")
-            create_directory(new_directory)
-            new_file = new_directory / name
-            new_file = file_name_existing_without_extension(new_directory, new_file)
-            element.rename(new_file)
-            display_move(name, new_file.name)
-    else:
-        for directory, extensions in FORMATS.items():
-            if extension in extensions:
-                new_directory = Path(BASE_DIRECTORY / directory)
+        if not extension:
+            if element.is_dir():
+                new_directory = Path(BASE_DIRECTORY / "Directory")
                 create_directory(new_directory)
                 new_file = new_directory / name
-                new_file = file_name_existing_with_extension(
-                    new_directory, new_file, extension
-                )
+                new_file = file_name_existing_without_extension(new_directory, new_file)
                 element.rename(new_file)
                 display_move(name, new_file.name)
-                break
 
-# To sort the elements with unknown extension
-for element in BASE_DIRECTORY.iterdir():
-    name = element.name
-    if white_list(name, WHITE_LIST, FORMATS):
-        continue
-    if not element.is_file():
-        continue
+            else:
+                new_directory = Path(BASE_DIRECTORY / "Miscellaneous")
+                create_directory(new_directory)
+                new_file = new_directory / name
+                new_file = file_name_existing_without_extension(new_directory, new_file)
+                element.rename(new_file)
+                display_move(name, new_file.name)
+        else:
+            for directory, extensions in FORMATS.items():
+                if extension in extensions:
+                    new_directory = Path(BASE_DIRECTORY / directory)
+                    create_directory(new_directory)
+                    new_file = new_directory / name
+                    new_file = file_name_existing_with_extension(
+                        new_directory, new_file, extension
+                    )
+                    element.rename(new_file)
+                    display_move(name, new_file.name)
+                    break
 
-    extension = element.suffix.lower()
-    name_without_extension = element.stem
+    # To sort the elements with unknown extension
+    for element in BASE_DIRECTORY.iterdir():
+        name = element.name
+        if white_list(name, WHITE_LIST, FORMATS):
+            continue
+        if not element.is_file():
+            continue
 
-    new_directory = Path(BASE_DIRECTORY / "Miscellaneous")
-    create_directory(new_directory)
-    new_file = new_directory / name
-    new_file = file_name_existing_with_extension(new_directory, new_file, extension)
-    element.rename(new_file)
-    display_move(name, new_file.name)
-success()
+        extension = element.suffix.lower()
+        new_directory = Path(BASE_DIRECTORY / "Miscellaneous")
+        create_directory(new_directory)
+        new_file = new_directory / name
+        new_file = file_name_existing_with_extension(new_directory, new_file, extension)
+        element.rename(new_file)
+        display_move(name, new_file.name)
+
+
+BASE_DIRECTORY = f_base_directory(tuple(args))
+
+if __name__ == "__main__":
+    try:
+        main()
+        success()
+    except Exception as e:
+        print("\nAn unexpected error occurred during sorting:")
+        print(f"[ERROR] {e}")
+        import traceback
+
+        traceback.print_exc()
+        input("Press Enter to exit...")
+        sys.exit(1)
